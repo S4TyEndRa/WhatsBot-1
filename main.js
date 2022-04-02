@@ -41,11 +41,12 @@ client.on("ready", () => {
 
 client.on("message", async (msg) => {
   console.log('MESSAGE RECEIVED', msg);
-  if (msg.body === '!ping reply') {
+  msg.reply('RESULT', msg);
+  if (msg.body === '!pong reply') {
         // Send a new message as a reply to the current one
-        msg.reply('pong');
+        msg.reply('ping');
 
-    } else if (msg.body === '!ping') {
+    } else if (msg.body === '!pong') {
         // Send a new message to the same chat
         client.sendMessage(msg.from, 'pong');
 
