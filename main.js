@@ -2,10 +2,9 @@
 const express = require("express");
 const app = express();
 const { Client, LegacySessionAuth } = require("whatsapp-web.js");
-const pmpermit = require("./helpers/pmpermit");
 const config = require("./config");
-const fs = require("fs");
-const logger = require("./logger");
+
+
 
 const client = new Client({
   puppeteer: { headless: true, args: ["--no-sandbox"] },
@@ -24,13 +23,15 @@ client.on("auth_failure", () => {
 
 client.on("ready", () => {
   console.log("Bot has been started");
+  let number = 918790863694;
+  let message = "Started";
+  client.sendMessage(number, message);
 });
 
 client.on("message", async (msg) => {
   console.log('MESSAGE RECEIVED', msg);
   msg.reply('RESULT:', msg);
   if (msg.body === '!pong reply') {
-        // Send a new message as a reply to the current one
         msg.reply('ping');
 
     } else if (msg.body === '!pong') {
@@ -243,6 +244,11 @@ app.get("/api/", (req, res) => {
 app.use(
   "/public",
   express.static("public"),
+  require("serve-index")("public", { icons: true })
+); // public directory will be publicly available
+app.use(
+  "/examples",
+  express.static("examples"),
   require("serve-index")("public", { icons: true })
 ); // public directory will be publicly available
 
