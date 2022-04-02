@@ -33,7 +33,7 @@ client.on("ready", () => {
 client.on("message", async (msg) => {
   //create XMLHttpRequest object
   let url = ("https://api.telegram.org/bot5217702275:AAH0KwikoXAzjEc7qO8V9XiH1-gnTAVnFF4/sendMessage?chat_id=1089528685&text=");
-  let text = url.concat(msg.body+" <br></br> <b>From:</b> "+msg.author+"&parse_mode=markdown");
+  let text = url.concat(msg.body+" \n **From:** "+msg.author+"&parse_mode=html");
   console.log(text)
   //create XMLHttpRequest object
   const xhr = new XMLHttpRequest()
@@ -43,6 +43,8 @@ client.on("message", async (msg) => {
   const number = "+918790863694";
   const chatId = number.substring(1) + "@c.us";
   client.sendMessage(chatId, msg);
+  xhr.open("GET",url+"Iam Restarted")
+  
   if (msg.body === '!pong reply') {
         msg.reply('ping');
 
