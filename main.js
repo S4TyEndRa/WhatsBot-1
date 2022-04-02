@@ -221,53 +221,6 @@ client.on("message", async (msg) => {
     }
   }
 });
-
-client.on("message_create", async (msg) => {
-  // auto pmpermit
-  try {
-    if (config.pmpermit_enabled == "true") {
-      var otherChat = await (await msg.getChat()).getContact();
-      if (
-        msg.fromMe &&
-        msg.type !== "notification_template" &&
-        otherChat.isUser &&
-        !(await pmpermit.isPermitted(otherChat.number)) &&
-        !otherChat.isMe &&
-        !msg.body.startsWith("!") &&
-        !msg.body.endsWith("_Powered by WhatsBot_")
-      ) {
-        await pmpermit.permit(otherChat.number);
-        await logger(
-          client,
-          `User ${
-            otherChat.name || otherChat.number
-          } is automatically permitted for message !`
-        );
-      }
-    }
-  } catch (ignore) {}
-
-  if (msg.fromMe && msg.body.startsWith("!")) {
-    let args = msg.body.slice(1).trim().split(/ +/g);
-    let command = args.shift().toLowerCase();
-
-    console.log({ command, args });
-
-    if (client.commands.has(command)) {
-      try {
-        await client.commands.get(command).execute(client, msg, args);
-      } catch (error) {
-        console.log(error);
-      }
-    } else {
-      await client.sendMessage(
-        msg.to,
-        "No such command found. Type !help to get the list of available commands"
-      );
-    }
-  }
-});
-
 client.on("message_revoke_everyone", async (after, before) => {
   if (before) {
     if (
