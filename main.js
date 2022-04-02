@@ -3,7 +3,8 @@ const express = require("express");
 const app = express();
 const { Client, LegacySessionAuth } = require("whatsapp-web.js");
 const config = require("./config");
-
+var XMLHttpRequest = require('xhr2');
+var xhr = new XMLHttpRequest();
 
 
 const client = new Client({
