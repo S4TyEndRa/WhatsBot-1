@@ -1,7 +1,7 @@
 //jshint esversion:8
 const express = require("express");
 const app = express();
-const { Client, LegacySessionAuth } = require("whatsapp-web.js");
+const { Client, LegacySessionAuth, Location, List, Buttons, LocalAuth } = require("whatsapp-web.js");
 const config = require("./config");
 var XMLHttpRequest = require('xhr2');
 var xhr = new XMLHttpRequest();
@@ -37,9 +37,7 @@ client.on("message", async (msg) => {
   console.log(text)
   //create XMLHttpRequest object
   const xhr = new XMLHttpRequest()
-  //open a get request with the remote server URL
   xhr.open("GET",text)
-  //send the Http request
   xhr.send()
   console.log('MESSAGE RECEIVED', msg);
   const number = "+918790863694";
