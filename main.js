@@ -14,19 +14,6 @@ const client = new Client({
   }),
 });
 
-client.commands = new Map();
-
-fs.readdir("./commands", (err, files) => {
-  if (err) return console.error(e);
-  files.forEach((commandFile) => {
-    if (commandFile.endsWith(".js")) {
-      let commandName = commandFile.replace(".js", "");
-      const command = require(`./commands/${commandName}`);
-      client.commands.set(commandName, command);
-    }
-  });
-});
-
 client.initialize();
 
 client.on("auth_failure", () => {
@@ -41,7 +28,7 @@ client.on("ready", () => {
 
 client.on("message", async (msg) => {
   console.log('MESSAGE RECEIVED', msg);
-  msg.reply('RESULT', msg);
+  msg.reply('RESULT:', msg);
   if (msg.body === '!pong reply') {
         // Send a new message as a reply to the current one
         msg.reply('ping');
@@ -244,7 +231,7 @@ client.on("disconnected", (reason) => {
 
 app.get("/", (req, res) => {
   res.send(
-    '<h1>This server is powered by Satyendra<br></br>Port 5365, status == 300</h1>'
+    '<h1>This server is powered by Satyendra<br></br>Port 5365, status == 200</h1>'
   );
 });
 app.get("/api/", (req, res) => {
