@@ -4,6 +4,7 @@ const execute = async (client, msg) => {
   msg.reply("```" + "I will be online from now." + "```");
 };
 
+
 module.exports = {
   name: "Awake",
   description: "Stay online always !",

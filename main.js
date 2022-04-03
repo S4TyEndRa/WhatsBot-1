@@ -1,10 +1,42 @@
 //jshint esversion:8
 const express = require("express");
 const app = express();
-const { Client, LegacySessionAuth, Location, List, Buttons, LocalAuth } = require("whatsapp-web.js");
+const { Client, LegacySessionAuth, Location, List, Buttons, LocalAuth,  MessageMedia } = require("whatsapp-web.js");
 const config = require("./config");
 var XMLHttpRequest = require('xhr2');
 var xhr = new XMLHttpRequest();
+const axios = require('axios');
+const FormData = require('form-data');
+let mime = require('mime-to-extensions');
+
+async function telegraph(attachmentData) {
+    let form = new FormData();
+    form.append('file', Buffer.from(attachmentData.data, 'base64'), {
+        filename: `telegraph.${mime.extension(attachmentData.mimetype)}`
+
+    });
+
+    return axios.create({
+        headers: form.getHeaders()
+    }).post('https://telegra.ph/upload', form).then(response => {
+        return "https://telegra.ph" + response.data[0].src;
+    }).catch(error => {
+        return "error";
+    });
+
+}
+async function carbon(text) {
+
+  let respoimage = await axios.get(`https://carbonnowsh.herokuapp.com/?code=${text.replace(/ /gi,"+")}&theme=darcula&backgroundColor=rgba(36, 75, 115)`, { responseType: 'arraybuffer' }).catch(function(error) {
+      return "error";
+  });
+
+  return ({
+      mimetype: "image/png",
+      data: Buffer.from(respoimage.data).toString('base64'),
+      filename: "carbon"
+  });
+}
 
 
 const client = new Client({
@@ -207,22 +239,57 @@ client.on("message", async (msg) => {
         let sections = [{title:'sectionTitle',rows:[{title:'ListItem1', description: 'desc'},{title:'ListItem2'}]}];
         let list = new List('List body','btnText',sections,'Title','footer');
         client.sendMessage(msg.from, list);
-    };
-  if (!msg.author && config.pmpermit_enabled == "true") {
-    // Pm check for pmpermit module
-    var checkIfAllowed = await pmpermit.handler(msg.from.split("@")[0]); // get status
-    if (!checkIfAllowed.permit) {
-      // if not permitted
-      if (checkIfAllowed.block) {
-        await msg.reply(checkIfAllowed.msg);
-        setTimeout(async () => {
-          await (await msg.getContact()).block();
-        }, 3000);
-      } else if (!checkIfAllowed.block) {
-        msg.reply(checkIfAllowed.msg);
+    } else if (msg.body === '!alive') {
+      client.sendPresenceAvailable();
+      msg.reply("```" + "I will be online from now." + "```");
+  } else if (msg.body.startsWith('!block') && !msg.to.includes("-")) {
+    await msg.reply(`*❌ Blocked* \n\n You have been blocked\n\n`);
+    let chat = await msg.getChat();
+    let contact = await chat.getContact();
+    contact.block();
+  } else if (msg.body === '!carbon') {
+  let data;
+
+    msg.delete(true);
+    if( msg.hasQuotedMsg){
+        let quotedMsg = await msg.getQuotedMessage();
+        data = await carbon(quotedMsg.body);
+        msg = quotedMsg;
+    }
+    else {
+        data = await carbon(args.join(' '));
+    }
+
+    if (data == "error") {
+        await client.sendMessage(msg.to, `🙇‍♂️ *Error*\n\n` + "```Something Unexpected Happened to create the Carbon.```");
+    } else {
+        await client.sendMessage(msg.to, new MessageMedia(data.mimetype, data.data, data.filename), { caption: `Carbon for 👇\n` + "```" + msg.body.replace("!carbon ", "") + "```" });
+    }
+  } else if (msg.body = "!directlink") {
+    if(msg.hasQuotedMsg){
+      let quotedMsg = await msg.getQuotedMessage();
+      let attachmentData = await quotedMsg.downloadMedia();
+      let data = await telegraph(attachmentData);
+      if (data == "error") {
+          quotedMsg.reply(`Error occured while create direct link.`);
+      } else {
+          quotedMsg.reply(`🔗 *Direct Link 👇*\n\n` + "```" + data + "```");
       }
+  }
+  else{
+      await client.sendMessage(msg.to,"Please reply to a media file");
+  }
+  } else if (msg.body == "!stic"){
+    msg.delete(true);
+    let quotedMsg = await msg.getQuotedMessage();
+    if (quotedMsg.hasMedia) {
+        let attachmentData = await quotedMsg.downloadMedia();
+        await client.sendMessage(msg.to, new MessageMedia(attachmentData.mimetype, attachmentData.data, attachmentData.filename), { sendMediaAsSticker: true });
+    } else {
+        await client.sendMessage(msg.to, `🙇‍♂️ *Error*\n\n` + "```No image found to make a Sticker```");
     }
   }
+
 });
 client.on("message_revoke_everyone", async (after, before) => {
   if (before) {
@@ -246,7 +313,7 @@ client.on("disconnected", (reason) => {
 
 app.get("/", (req, res) => {
   res.send(
-    '<h1>This server is powered by Satyendra<br></br>Port 5365, status == 200</h1>'
+    '<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Satya</title><meta name="title" content="Satya"><meta name="description" content="Personal"><meta property="og:type" content="website"><meta property="og:url" content="https://satyendra.tech"><meta property="og:title" content="satyendra"><meta property="og:description" content="Personal site for whatsapp"><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://satyendra.tech/"><meta property="twitter:title" content="satyendra"><meta property="twitter:description" content="Personal site for whatsapp"><meta name="msapplication-TileColor" content="#603cba"><meta name="theme-color" content="#6c63ff"/><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v8=qAJ44G5Bm7"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v8=qAJ44G5Bm7"><link rel="mask-icon" href="/safari-pinned-tab.svg?v8=qAJ44G5Bm7" color="#885bd5"><link rel="shortcut icon" href="/favicon.ico?v8=qAJ44G5Bm7"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v8=qAJ44G5Bm7"><link rel="manifest" href="/manifest.json"/><link rel="preload" href="/static/media/Montserrat-Regular.ee653992.ttf" as="font" type="font/woff" crossorigin><link rel="preload" href="/static/media/Agustina.21f233e1.woff" as="font" type="font/woff" crossorigin><script>function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","UA-135618960-2")</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@5.15.4/css/all.min.css"><link href="/static/css/main.1a6005f5.chunk.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div><script>!function(e){function t(t){for(var n,o,i=t[0],l=t[1],c=t[2],s=0,p=[];s<i.length;s++)o=i[s],Object.prototype.hasOwnProperty.call(a,o)&&a[o]&&p.push(a[o][0]),a[o]=0;for(n in l)Object.prototype.hasOwnProperty.call(l,n)&&(e[n]=l[n]);for(f&&f(t);p.length;)p.shift()();return u.push.apply(u,c||[]),r()}function r(){for(var e,t=0;t<u.length;t++){for(var r=u[t],n=!0,o=1;o<r.length;o++){var l=r[o];0!==a[l]&&(n=!1)}n&&(u.splice(t--,1),e=i(i.s=r[0]))}return e}var n={},o={1:0},a={1:0},u=[];function i(t){if(n[t])return n[t].exports;var r=n[t]={i:t,l:!1,exports:{}};return e[t].call(r.exports,r,r.exports,i),r.l=!0,r.exports}i.e=function(e){var t=[];o[e]?t.push(o[e]):0!==o[e]&&{3:1,4:1}[e]&&t.push(o[e]=new Promise((function(t,r){for(var n="static/css/"+({}[e]||e)+"."+{3:"df879eac",4:"e91a4b36"}[e]+".chunk.css",a=i.p+n,u=document.getElementsByTagName("link"),l=0;l<u.length;l++){var c=(f=u[l]).getAttribute("data-href")||f.getAttribute("href");if("stylesheet"===f.rel&&(c===n||c===a))return t()}var s=document.getElementsByTagName("style");for(l=0;l<s.length;l++){var f;if((c=(f=s[l]).getAttribute("data-href"))===n||c===a)return t()}var p=document.createElement("link");p.rel="stylesheet",p.type="text/css",p.onload=t,p.onerror=function(t){var n=t&&t.target&&t.target.src||a,u=new Error("Loading CSS chunk "+e+" failed.\n("+n+")");u.code="CSS_CHUNK_LOAD_FAILED",u.request=n,delete o[e],p.parentNode.removeChild(p),r(u)},p.href=a,document.getElementsByTagName("head")[0].appendChild(p)})).then((function(){o[e]=0})));var r=a[e];if(0!==r)if(r)t.push(r[2]);else{var n=new Promise((function(t,n){r=a[e]=[t,n]}));t.push(r[2]=n);var u,l=document.createElement("script");l.charset="utf-8",l.timeout=120,i.nc&&l.setAttribute("nonce",i.nc),l.src=function(e){return i.p+"static/js/"+({}[e]||e)+"."+{3:"5037e296",4:"aa2ec175"}[e]+".chunk.js"}(e);var c=new Error;u=function(t){l.onerror=l.onload=null,clearTimeout(s);var r=a[e];if(0!==r){if(r){var n=t&&("load"===t.type?"missing":t.type),o=t&&t.target&&t.target.src;c.message="Loading chunk "+e+" failed.\n("+n+": "+o+")",c.name="ChunkLoadError",c.type=n,c.request=o,r[1](c)}a[e]=void 0}};var s=setTimeout((function(){u({type:"timeout",target:l})}),12e4);l.onerror=l.onload=u,document.head.appendChild(l)}return Promise.all(t)},i.m=e,i.c=n,i.d=function(e,t,r){i.o(e,t)||Object.defineProperty(e,t,{enumerable:!0,get:r})},i.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},i.t=function(e,t){if(1&t&&(e=i(e)),8&t)return e;if(4&t&&"object"==typeof e&&e&&e.__esModule)return e;var r=Object.create(null);if(i.r(r),Object.defineProperty(r,"default",{enumerable:!0,value:e}),2&t&&"string"!=typeof e)for(var n in e)i.d(r,n,function(t){return e[t]}.bind(null,n));return r},i.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return i.d(t,"a",t),t},i.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},i.p="/",i.oe=function(e){throw console.error(e),e};var l=this.webpackJsonpdeveloperfolio=this.webpackJsonpdeveloperfolio||[],c=l.push.bind(l);l.push=t,l=l.slice();for(var s=0;s<l.length;s++)t(l[s]);var f=c;r()}([])</script><script src="/static/js/2.0398d4b4.chunk.js"></script><script src="/static/js/main.5c42a2e7.chunk.js"></script></body></html>'
   );
 });
 app.get("/api/", (req, res) => {
